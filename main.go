@@ -14,18 +14,19 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/stevenyao/go-opencc"
 )
 
 const (
-	config_s2tw = "/usr/share/opencc/s2tw.json"
-	inputDir    = "input"
-	outputDir   = "output"
+	inputDir  = "input"
+	outputDir = "output"
 )
 
 var (
+	config_s2tw  string
 	replace_text = map[string]string{
 		"大陆":   "港台",
 		"充值":   "儲值",
@@ -44,6 +45,19 @@ var (
 		"更新内容": "维护内容",
 	}
 )
+
+func init() {
+	switch runtime.GOOS {
+	case "darwin":
+		config_s2tw = "/usr/local/share/opencc/s2tw.json"
+	case "linux":
+		config_s2tw = "/usr/share/opencc/s2tw.json"
+	case "windons":
+		fmt.Println("no config path in windons")
+	default:
+		fmt.Println("no config path in system", runtime.GOOS)
+	}
+}
 
 //根据特定词组替换
 func replaceWord(in string) (out string) {

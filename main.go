@@ -118,7 +118,7 @@ func main() {
 	fileList := []string{}
 	err := filepath.Walk(inputDir, func(path string, f os.FileInfo, err error) error {
 		//只处理lua文件
-		if strings.HasSuffix(path, ".lua") {
+		if strings.HasSuffix(path, ".csd") || strings.HasSuffix(path, ".lua") {
 			fileList = append(fileList, path)
 		}
 		return nil

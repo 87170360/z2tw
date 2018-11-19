@@ -16,6 +16,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 
 	"github.com/stevenyao/go-opencc"
 )
@@ -115,6 +116,7 @@ func createDir(dir string) {
 }
 
 func main() {
+
 	fileList := []string{}
 	err := filepath.Walk(inputDir, func(path string, f os.FileInfo, err error) error {
 		//只处理lua文件
@@ -127,10 +129,31 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
+	/*
+		for _, file := range fileList {
+			//fmt.Println(file)
+			out := createOutputDir(file)
+			converFile(file, out)
+		}
+	*/
+
+	var wg sync.WaitGroup
+	worklist := make(chan string)
+	for i := 0; i < 20; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for file := range worklist {
+				out := createOutputDir(file)
+				converFile(file, out)
+			}
+		}()
+	}
 
 	for _, file := range fileList {
-		//fmt.Println(file)
-		out := createOutputDir(file)
-		converFile(file, out)
+		worklist <- file
 	}
+	close(worklist)
+
+	wg.Wait()
 }

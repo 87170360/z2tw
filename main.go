@@ -27,6 +27,7 @@ const (
 )
 
 var (
+	filetype     = []string{".csd", ".lua", ".xml", ".txt"}
 	config_s2tw  string
 	replace_text = map[string]string{
 		"大陆":    "港台",
@@ -118,12 +119,21 @@ func createDir(dir string) {
 	}
 }
 
+func checkFiletype(file string) bool {
+	for _, v := range filetype {
+		if strings.HasSuffix(file, v) {
+			return true
+		}
+	}
+	return false
+}
+
 func main() {
 
 	fileList := []string{}
 	err := filepath.Walk(inputDir, func(path string, f os.FileInfo, err error) error {
 		//只处理lua文件
-		if strings.HasSuffix(path, ".csd") || strings.HasSuffix(path, ".lua") {
+		if checkFiletype(path) {
 			fileList = append(fileList, path)
 		}
 		return nil

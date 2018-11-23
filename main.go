@@ -128,7 +128,27 @@ func checkFiletype(file string) bool {
 	return false
 }
 
+func RemoveContents(dir string) error {
+	d, err := os.Open(dir)
+	if err != nil {
+		return err
+	}
+	defer d.Close()
+	names, err := d.Readdirnames(-1)
+	if err != nil {
+		return err
+	}
+	for _, name := range names {
+		err = os.RemoveAll(filepath.Join(dir, name))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func main() {
+	RemoveContents(outputDir)
 
 	fileList := []string{}
 	err := filepath.Walk(inputDir, func(path string, f os.FileInfo, err error) error {
@@ -142,6 +162,7 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
+
 	/*
 		for _, file := range fileList {
 			//fmt.Println(file)

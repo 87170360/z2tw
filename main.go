@@ -18,6 +18,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/mholt/archiver"
 	"github.com/stevenyao/go-opencc"
 )
 
@@ -49,6 +50,8 @@ var (
 		"停机更新":  "停机维护",
 		"更新内容":  "维护内容",
 	}
+	filename1 = "1.tar.gz"
+	filename2 = "2.tar.gz"
 )
 
 func init() {
@@ -147,7 +150,24 @@ func RemoveContents(dir string) error {
 	return nil
 }
 
+func isExist(d string) bool {
+	if _, err := os.Stat(d); os.IsNotExist(err) {
+		return false
+	}
+	return true
+}
+
 func main() {
+	//解压文件
+	if isExist(filename1) {
+		RemoveContents(inputDir)
+		err := archiver.Unarchive(filename1, inputDir)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+	}
+
 	RemoveContents(outputDir)
 
 	fileList := []string{}
@@ -190,4 +210,7 @@ func main() {
 	close(worklist)
 
 	wg.Wait()
+
+	//打包文件
+	err = archiver.Archive([]string{outputDir}, filename2)
 }

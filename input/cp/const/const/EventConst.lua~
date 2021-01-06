@@ -1,0 +1,560 @@
+-------游戏中，需要发送的各种事件常量写在这里-----------
+-- 需要把事件按对应模块分类放在一起，方便查找    ------
+-- 需要写注释，标明事件常量的用处，以及参数列表 -----
+---------------------------------------------------------------------------
+
+local EventConst = {}
+
+
+--=====界面跳转公用事件=====================
+
+--[[
+    需要打开游戏中某个场景层界面的时候调用 
+    参数:     
+         open_info: 要打开的场景界面的信息，包含name... , 以及打开此界面传递的参数
+         back_info: 当前要关闭界面的信息，包含name... , 以及保存此界面的参数,当下次打开时使用 
+]]
+EventConst.game_world_to_open_module = "game_world_to_open_module"
+
+--[[
+    需要关闭游戏中某个场景层全部界面的时候调用 
+    参数:无 
+]]
+EventConst.game_world_to_close_module = "game_world_to_close_module"
+
+--[[
+    返回按钮触发的界面关闭事件 
+    参数:无
+]]
+EventConst.game_world_to_return_module = "game_world_to_return_module"
+--==================================================================
+
+
+--=============注册登录模块事件==============
+
+--[[
+    游客登陆返回
+]]
+EventConst.GuestRsp = "GuestRsp"
+
+--[[
+    普通登陆返回
+]]
+EventConst.LoginRsp = "LoginRsp"
+
+--[[
+    注册返回
+]]
+EventConst.RegisterRsp = "RegisterRsp"
+
+--[[
+    服务器列表返回
+]]
+EventConst.ZoneRsp = "ZoneRsp"
+
+--[[
+    创建角色返回
+]]
+
+EventConst.CreateRsp = "CreateRsp"
+--[[
+    获取角色属性返回
+]]
+EventConst.GetRoleRsp = "GetRoleRsp"
+EventConst.UpdateCurrencyRsp = "UpdateCurrencyRsp"
+EventConst.onRoleLevelChange = "onRoleLevelChange"
+--[[
+    获取角色物品返回
+]]
+EventConst.GetRoleItemRsp = "GetRoleItemRsp"
+
+--[[
+    进入游戏服返回
+]]
+EventConst.EnterGameRsp = "EnterGameRsp"
+
+--查看玩家信息
+EventConst.ViewPlayerRsp = "ViewPlayerRsp"
+
+--查看物品详情信息
+EventConst.ViewItemRsp = "ViewItemRsp"
+
+--物品更新
+EventConst.ItemUpdateRsp = "ItemUpdateRsp"
+
+--出售物品
+EventConst.SellItemRsp = "SellItemRsp"
+
+--学习武学书
+EventConst.SkillItemRsp = "SkillItemRsp"
+
+------------- 大地图相关事件 begin ---------------
+--吃瓜群众
+EventConst.IdleStaffRsp = "IdleStaffRsp"
+
+--请求善恶事件列表返回
+EventConst.GetConductRsp = "GetConductRsp"
+
+--开启挂机善恶事件
+EventConst.StartHangConductRsp = "StartHangConductRsp"
+
+--开启挑战善恶事件
+EventConst.StartFightConductRsp = "StartFightConductRsp"
+
+--打断善恶事件返回
+EventConst.BreakHangConductRsp = "BreakHangConductRsp"
+
+--[[
+    --更新善恶事件
+]]
+EventConst.UpdateHangConductRsp = "UpdateHangConductRsp"
+
+--停止善恶事件
+EventConst.StopConductRsp = "StopConductRsp"
+
+--挑战吃瓜群众
+EventConst.StartFightIdleStaffRsp = "StartFightIdleStaffRsp"
+
+--获取大侠列表
+EventConst.GetHeroRsp = "GetHeroRsp"
+
+--挑战大侠
+EventConst.StartFightHeroRsp = "StartFightHeroRsp"
+
+--收买大侠
+EventConst.BribeHeroRsp = "BribeHeroRsp"
+--收买所有大侠
+EventConst.BribeAllHeroRsp = "BribeAllHeroRsp"
+--领取累积奖励
+EventConst.GetAccuAwardRsp = "GetAccuAwardRsp"
+--求助挑战大侠
+EventConst.InviteHeroRsp = "InviteHeroRsp"
+--接受并帮助挑战大侠
+EventConst.AcceptHeroRsp = "AcceptHeroRsp"
+--他人帮助挑战大侠结果返回
+EventConst.OtherDefeatRsp = "OtherDefeatRsp"
+--查看大侠状态
+EventConst.ViewHeroStateRsp = "ViewHeroStateRsp"
+
+
+
+EventConst.GetSelfVanRsp = "GetSelfVanRsp"  --获取个人镖车信息
+EventConst.StartVanRsp = "StartVanRsp"      --开始押镖
+EventConst.RefreshSelfVanRsp = "RefreshSelfVanRsp" --刷新所有未开始的镖车
+EventConst.GetAllVanRsp = "GetAllVanRsp" --获取所有其他人的镖车信息列表返回
+EventConst.RobVanRsp = "RobVanRsp" --伏击返回
+EventConst.BeRobVanRsp = "BeRobVanRsp" --被伏击返回
+EventConst.BuyRobRsp = "BuyRobRsp" --购买伏击次数返回
+
+EventConst.ExpressFinished = "ExpressFinished"  --押镖完成
+
+EventConst.onEnterRestErea = "onEnterRestErea" --进入镖车休息区，显示头像
+
+------------- 大地图相关事件 end ---------------
+
+
+--[[
+    断线重连重发验证协议返回
+]]
+EventConst.ReconnectRsp = "ReconnectRsp"
+
+--重连并且服务器验证成功
+EventConst.ReconnectLoginOK = "ReconnectLoginOK"
+
+
+--[[
+    获取章节信息列表返回
+]]
+EventConst.GetStoryInfoRsp = "GetStoryInfoRsp"
+
+--[[
+	返回战斗信息
+]]
+EventConst.EnterStoryLevelRsp = "EnterStoryLevelRsp"
+
+--[[
+    扫荡结果返回
+]]
+EventConst.SweepStoryRsp = "SweepStoryRsp"
+
+--重置扫荡或挑战次数返回
+EventConst.ResetStoryRsp = "ResetStoryRsp"
+
+--查询战斗录像
+EventConst.GetCombatDataRsp = "GetCombatDataRsp"
+
+--查询战斗录像
+EventConst.GetCombatListRsp = "GetCombatListRsp"
+
+--[[
+    大地图中玩家移动到指定位置后，给地图层发送移动结束消息 
+    参数:     
+         role: 当前移动结束的玩家MapRole
+]]
+EventConst.map_role_move_to = "map_role_move_to"
+
+--移动到建筑附近后操作
+EventConst.onOpenAcceptUI = "onOpenAcceptUI"
+
+--[[
+    大地图中打开剧情章节选择界面
+    参数:     
+         city: 当前城镇id
+]]
+EventConst.map_open_chapter = "map_open_chapter"
+
+
+--战斗界面相关消息
+EventConst.combat_show_story = "combat_show_story"
+
+--战斗结束消息
+EventConst.combat_finish = "combat_finish"
+
+--玩家升级消息
+EventConst.player_level_up = "player_level_up"
+
+--获取所有武学列表
+EventConst.GetAllSkillRsp = "get_all_skill_rsp"
+
+--学习武学返回
+EventConst.LearnSkillRsp = "learn_skill_rsp"
+
+--武学突破
+EventConst.SkillBreakOutRsp = "skill_breakout"
+
+--武学升级
+EventConst.SkillLevelUpRsp = "skill_levelup"
+
+--武学重置
+EventConst.ResetSkillRsp = "reset_skill"
+
+--武学招式升级
+EventConst.ArtLevelUpRsp = "art_levelup_sp"
+
+--装备武学招式
+EventConst.UseSkillArtRsp = "UseSkillArtRsp"
+
+--分解武学碎片
+EventConst.DecomposeSkillPiecesRsp = "decompose_skill_pieces_rsp"
+
+--更新武学组合
+EventConst.UpdateSkillCombineRsp = "update_skill_combine_rsp"
+
+--更新武学境界
+EventConst.ImproveSkillBoundaryRsp = "improve_skill_boundary_rsp"
+
+--参悟
+EventConst.BuyTrainPointRsp = "BuyTrainPointRsp"
+
+--获取抽奖数据
+EventConst.GetLotteryDataRsp = "get_lottery_data_rsp"
+--抽奖返回
+EventConst.BuySkillLotteryRsp = "buy_skill_lottery_rsp"
+--抽奖返回
+EventConst.BuyTreasureLotteryRsp = "buy_treasure_lottery_rsp"
+--购买积分商店物品
+EventConst.BuyLotteryPointShopRsp = "buy_lottery_point_shop_rsp"
+--刷新积分商店
+EventConst.RefreshLotteryPointShopRsp = "refresh_lottery_point_shop_rsp"
+--琅琊阁积分排行榜
+EventConst.GetLotteryRankRsp = "get_lottery_rank_rsp"
+--琅琊阁积分排行榜
+EventConst.GetSignInfoRsp = "get_sign_info_rsp"
+--琅琊阁积分排行榜
+EventConst.SignRsp = "sign_rsp"
+--琅琊阁积分排行榜
+EventConst.GetSummarySignRewardRsp = "get_summary_sign_reward_rsp"
+--琅琊阁积分排行榜
+EventConst.SignAllRsp = "sign_all_rsp"
+
+
+--开始历练
+EventConst.StartExerciseRsp = "StartExerciseRsp"
+
+--快速历练
+EventConst.QuickExerciseRsp = "QuickExerciseRsp"
+
+--获取历练
+EventConst.GetExerciseRsp = "GetExerciseRsp"
+
+--历练物品自动出售
+EventConst.AutoSellRsp = "AutoSellRsp"
+
+--获取秘境次数信息
+EventConst.GetMijingRsp = "GetMijingRsp"
+
+--开始秘境挑战
+EventConst.StartMijingRsp = "StartMijingRsp"
+
+--购买秘境挑战次数
+EventConst.BuyMijingRsp = "BuyMijingRsp"
+
+--请求商店物品列表
+EventConst.StoreGoodsRsp = "StoreGoodsRsp"
+--请求刷新商店物品列表
+EventConst.StoreRefreshRsp = "StoreRefreshRsp"
+--购买商品返回
+EventConst.StoreBuyRsp = "StoreBuyRsp"
+--请求神秘商店开启状态
+EventConst.StoreOpenRsp = "StoreOpenRsp"
+--神秘商店时间结束
+EventConst.StoreTimeOut = "StoreTimeOut"
+
+
+--门派进阶返回
+EventConst.GangEnhanceRsp = "GangEnhanceRsp"
+--门派请求排名信息返回
+EventConst.GangRankInfoRsp = "GangRankInfoRsp"
+--门派比武刷新挑战对象返回
+EventConst.GangRankRefreshRsp = "GangRankRefreshRsp"
+--门派比武进入对战返回
+EventConst.GangRankFightRsp = "GangRankFightRsp"
+--门派请求排名奖励
+EventConst.GangRankAwardRsp = "GangRankAwardRsp"
+--重置门派挑战次数返回
+EventConst.GangRankBuyCountRsp = "GangRankBuyCountRsp"
+--门派修炼信息返回
+EventConst.GangPracticeInfoRsp = "GangPracticeInfoRsp"
+--门派元宝修炼返回
+EventConst.GangPracticeGoldRsp = "GangPracticeGoldRsp"
+--门派银两修炼返回
+EventConst.GangPracticeSilverRsp = "GangPracticeSilverRsp"
+--门派道具修炼返回
+EventConst.GangPracticeItemRsp = "GangPracticeItemRsp"
+--聊天信息返回
+EventConst.ChatChannelRsp = "ChatChannelRsp"
+
+EventConst.ChatLayerClose = "ChatLayerClose"
+
+--强化预估返回
+EventConst.EquipStrengthenEvaluateRsp = "EquipStrengthenEvaluateRsp"
+--强化结果返回
+EventConst.EquipStrengthenRsp = "EquipStrengthenRsp"
+--一键选择强化材料
+EventConst.EquipStrengthenQuickSelectRsp = "EquipStrengthenQuickSelectRsp"
+--传承返回
+EventConst.EquipInheritedRsp = "EquipInheritedRsp"
+--熔炼返回
+EventConst.EquipMeltRsp = "EquipMeltRsp"
+--撤销熔炼结果
+EventConst.EquipMeltCancleRsp = "EquipMeltCancleRsp"
+
+--装备强化，熔炼，传承确认通知
+EventConst.EquipOperateConfirmed = "EquipOperateConfirmed"
+
+--合成碎片
+EventConst.FragMergeRsp = "FragMergeRsp"
+
+
+--银两兑换
+EventConst.ConvertSilverRsp = "ConvertSilverRsp"
+--快速银两兑换
+EventConst.ConvertSilverExRsp = "ConvertSilverExRsp"
+--获取兑换信息
+EventConst.GetConvertInfoRsp = "GetConvertInfoRsp"
+
+-- EventConst.open_SelectEquipTip_view = "open_SelectEquipTip_view" -- 打开选择装备界面
+EventConst.open_face_change_view = "open_face_change_view" --打开头像更换界面
+EventConst.open_vip_view = "open_vip_view"            -- 打开vip特权及礼包界面
+EventConst.open_daily_task = "open_daily_task"
+EventConst.open_activity_view = "OpenActivityView"
+EventConst.open_friend_view = "OpenFriendView"
+EventConst.open_skill_map_view = "OpenSkillMapView"
+EventConst.open_mail_view = "open_mail_view"
+EventConst.on_combat_finished = "OnCombatFinished"
+EventConst.open_xiakexing_view = "open_xiakexing_view" --打开侠客行的界面
+EventConst.open_xiakexing_heroselect_view = "open_xiakexing_heroselect_view" --打开侠客行选择npc的界面
+EventConst.open_zhuluzhanchang_view = "open_zhuluzhanchang_view" --打开或关闭逐鹿战场主界面
+EventConst.open_achivement_view = "open_achivement_view" --打开成就系统
+EventConst.open_all_achive_attribute = "open_all_achive_attribute" --打开成就所有属性界面
+
+-- 对于缓存的界面，需要在setVisible，false，true时处理一些界面显示的问题
+EventConst.on_cache_ui_visible_state_changed = "on_cache_ui_visible_state_changed"   --缓存界面显示或隐藏
+
+EventConst.on_major_down_btn_clicked = "on_major_down_btn_clicked"
+
+
+EventConst.GetRoleSimpleRsp = "GetRoleSimpleRsp"
+EventConst.DeleteFriendRsp = "DeleteFriendRsp"
+EventConst.AddFriendRsp = "AddFriendRsp"
+EventConst.AddFriendNotifyRsp = "AddFriendNotifyRsp"
+EventConst.AgreeRequestRsp = "AgreeRequestRsp"
+EventConst.DeclineRequestRsp = "DeclineRequestRsp"
+EventConst.DeleteEnemyRsp = "DeleteEnemyRsp"
+EventConst.SearchPlayerRsp = "SearchPlayerRsp"
+EventConst.GetPlayerOnlineRsp = "GetPlayerOnlineRsp"
+EventConst.PlayerLogoutNotifyRsp = "PlayerLogoutNotifyRsp"
+EventConst.PlayerLoginNotifyRsp = "PlayerLoginNotifyRsp"
+EventConst.ChangeSearchListRsp = "ChangeSearchListRsp"
+EventConst.FriendFightRsp = "FriendFightRsp"
+EventConst.EnemyFightRsp = "EnemyFightRsp"
+EventConst.AddEnemyRsp = "AddEnemyRsp"
+EventConst.DeleteEnemyRsp = "DeleteEnemyRsp"
+
+EventConst.GetMailListRsp = "GetMailListRsp"
+EventConst.DispatchMailRsp = "DispatchMailRsp"
+EventConst.ReceiveMailRsp = "ReceiveMailRsp"
+EventConst.DeleteMailRsp = "DeleteMailRsp"
+--斗酒
+EventConst.GetGuessFingerDataRsp = "GetGuessFingerDataRsp"
+EventConst.GetGuessOpponentRsp = "GetGuessOpponentRsp"
+EventConst.GuessFingerRsp = "GuessFingerRsp"
+EventConst.PickWineRsp = "PickWineRsp"
+EventConst.WantFightRsp = "WantFightRsp"
+--斗老千
+EventConst.GetRollDiceDataRsp = "GetRollDiceDataRsp"
+EventConst.RollDiceRsp = "RollDiceRsp"
+EventConst.ChangeDiceRsp = "ChangeDiceRsp"
+EventConst.ResetDiceStateRsp = "ResetDiceStateRsp"
+EventConst.GetMonthRewardRsp = "GetMonthRewardRsp"
+
+--天下事
+EventConst.NavigateEvent = "NavigateEvent"
+
+--刷新红点提示
+EventConst.refreshRedPoint = "refreshRedPoint" 
+---------------------------------------------------------------
+
+EventConst.UseEquipRsp = "UseEquipRsp"
+
+--界面打开通知
+EventConst.enter_layer_notice = "enter_layer_notice"
+--打开/关闭/隐藏 新手指引界面
+EventConst.open_playerguider_view = "open_playerguider_view"
+--获取指引界面的按钮位置
+EventConst.get_guide_view_point = "get_guide_view_point" 
+--点击指引点，打开新界面
+EventConst.guide_click_view_point = "guide_click_view_point"
+
+EventConst.click_view_button = "click_view_button"
+
+--检测界面是否显示
+EventConst.check_layer_visible = "check_layer_visible"
+--打开选择武学流派界面
+EventConst.show_skillsect_layer = "show_skillsect_layer"
+--指向第2类流派
+EventConst.point_skillsect_2 = "point_skillsect_2"
+--指向第3类流派
+EventConst.point_skillsect_3 = "point_skillsect_3"
+--开始选择流派
+EventConst.select_skillsect = "select_skillsect"
+
+
+--进入选择装备界面
+EventConst.onEnterSelectTips = "onEnterSelectTips"
+
+--进入求助的挑战界面
+EventConst.enterSeekHelpFightUI = "enterSeekHelpFightUI"
+
+--获取已购买的头像
+EventConst.GetFaceRsp = "GetFaceRsp"
+--购买头像
+EventConst.BuyFaceRsp = "BuyFaceRsp"
+--更换头像
+EventConst.ChangeFaceRsp = "ChangeFaceRsp"
+
+--购买体力
+EventConst.BuyPhysicalRsp = "BuyPhysicalRsp" 
+EventConst.UpdatePhysicalRsp = "UpdatePhysicalRsp"
+
+--在线跨天
+EventConst.OnlineCrossDayRsp = "OnlineCrossDayRsp"
+
+
+---擂台
+EventConst.GetArenaDataRsp = "GetArenaDataRsp"
+EventConst.RefreshOpponentRankRsp = "RefreshOpponentRankRsp"
+EventConst.GetArenaRankListRsp = "GetArenaRankListRsp"
+EventConst.ArenaFightRsp = "ArenaFightRsp"
+EventConst.BuyBufferRsp = "BuyBufferRsp"
+EventConst.BuyChallengeRsp = "BuyChallengeRsp"
+EventConst.GetLastRankAwardRsp = "GetLastRankAwardRsp"
+
+--华山论剑
+EventConst.GetMountainPlayerListRsp = "GetMountainPlayerListRsp"
+EventConst.GetMountainDataRsp = "GetMountainDataRsp"
+EventConst.SignUpMountainRsp = "SignUpMountainRsp"
+EventConst.MountainGuessRsp = "MountainGuessRsp"
+EventConst.GetMountainPhaseStateRsp = "GetMountainPhaseStateRsp"
+
+--领取/购买VIP礼包
+EventConst.GetVipGiftRsp = "GetVipGiftRsp"
+--获取VIP信息
+EventConst.GetVipInfoRsp = "GetVipInfoRsp"
+--充值(模拟)
+EventConst.RechargeRsp = "RechargeRsp"
+
+EventConst.BuyFashionRsp = "BuyFashionRsp" --购买时装
+EventConst.UseFashionRsp = "UseFashionRsp" --使用时装
+
+EventConst.ChangeLeadRsp = "ChangeLeadRsp" --指引更新
+EventConst.OnNewGuideAutoAcceptEvent = "OnNewGuideAutoAcceptEvent" --江湖事指引自动接事件
+EventConst.OnNewGuideDouCheng = "OnNewGuideDouCheng"
+
+EventConst.FeatureRsp = "FeatureRsp" --指引更新
+
+--日常任务
+EventConst.GetDailyDataRsp = "GetDailyDataRsp"
+EventConst.GetDailyPointRsp = "GetDailyPointRsp"
+EventConst.GetDailyTaskRsp = "GetDailyTaskRsp"
+EventConst.on_auto_open_ui = "on_auto_open_ui" --快速打开ui
+
+--帮派
+EventConst.GetPlayerGuildDataRsp = "GetPlayerGuildDataRsp"
+EventConst.GetGuildWantedListRsp = "GetGuildWantedListRsp"
+EventConst.FightGuildWantedRsp = "FightGuildWantedRsp"
+EventConst.GetFightCityStateRsp = "GetFightCityStateRsp"
+
+--升级礼包
+EventConst.GetUpgradeGiftRsp = "GetUpgradeGiftRsp"
+--战力礼包
+EventConst.GetFightGiftRsp = "GetFightGiftRsp"
+--体力礼包
+EventConst.GetPhysicalRsp = "GetPhysicalRsp"
+
+
+EventConst.open_arena_view = "open_arena_view"
+
+EventConst.close_shop_view = "close_shop_view"
+
+
+EventConst.ExpandPackSizeRsp = "ExpandPackSizeRsp"
+
+--邀请好友，绑定好友，邀请奖励
+EventConst.InviteBindRsp = "InviteBindRsp"
+EventConst.InviteRsp = "InviteRsp"
+EventConst.InviteGiftRsp = "InviteGiftRsp"
+EventConst.FulfillGiftRsp = "FulfillGiftRsp"
+
+--侠客行信息
+EventConst.HeroStoryInfoRsp = "HeroStoryInfoRsp"
+EventConst.HeroStoryExtraRsp = "HeroStoryExtraRsp"
+EventConst.HeroStoryChallengeRsp = "HeroStoryChallengeRsp"
+EventConst.HeroStorySweepRsp = "HeroStorySweepRsp"
+
+--逐鹿战场
+EventConst.DeerSignRsp = "DeerSignRsp"
+EventConst.DeerViewCityRsp = "DeerViewCityRsp"
+EventConst.DeerFightRsp = "DeerFightRsp"
+
+--同步月卡，终身卡，季卡，年卡数据
+EventConst.CardRsp = "CardRsp"
+EventConst.OtherRsp = "OtherRsp" -- 同步限时充值及江湖基金信息
+EventConst.GetRechargeGiftRsp = "GetRechargeGiftRsp" --领取限时充值奖励
+EventConst.GetFirstRechargeRsp = "GetFirstRechargeRsp" --领取首充活动奖励
+EventConst.ChangeFirstRechargeState = "ChangeFirstRechargeState" -- 领取奖励后删除首充界面
+EventConst.GetFundRsp = "GetFundRsp" --领取基金奖励
+EventConst.FirstRechargeConfRsp = "FirstRechargeConfRsp"
+EventConst.FundConfRsp = "FundConfRsp"
+EventConst.RechargeGiftConfRsp = "RechargeGiftConfRsp"
+
+--成就
+EventConst.achive_goto = "achive_goto" --成就界面跳转
+EventConst.GetAchieveRsp = "GetAchieveRsp" --领取成就奖励
+EventConst.AchieveRsp = "AchieveRsp" --成就信息
+EventConst.SetAchieveTitleRsp = "SetAchieveTitleRsp" --设置成就称号
+
+--历练
+EventConst.lilian_open = "lilian_open"
+
+return EventConst

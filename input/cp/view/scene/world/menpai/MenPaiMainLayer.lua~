@@ -1,0 +1,272 @@
+
+local BLayer = require "cp.view.ui.base.BLayer"
+local MenPaiMainLayer = class("MenPaiMainLayer",BLayer)
+
+function MenPaiMainLayer:create(openInfo)
+	local layer = MenPaiMainLayer.new(openInfo)
+	return layer
+end
+
+function MenPaiMainLayer:initListEvent()
+	self.listListeners = {
+
+		--新手指引获取目标点位置
+		[cp.getConst("EventConst").get_guide_view_point] = function(evt)
+			
+			if evt.classname == "MenPaiMainLayer" then
+				if evt.guide_name == "menpai_wuxue" then
+					local boundbingBox = self[evt.target_name]:getBoundingBox()
+					local pos = self[evt.target_name]:getParent():convertToWorldSpace(cc.p(boundbingBox.x+boundbingBox.width/2,boundbingBox.y+boundbingBox.height/2))
+					
+					--此步指引为向右的手指
+					local finger_info = {pos = pos, finger = {guide_type = "point",dir="right"} }
+					evt.ret = finger_info
+				end
+			end
+		end,
+		--新手指引点击目标点
+		[cp.getConst("EventConst").guide_click_view_point] = function(evt)
+			if evt.classname == "MenPaiMainLayer" then
+				if evt.guide_name == "menpai_wuxue" then
+					self:onUIButtonClick(self[evt.target_name])
+				end
+			end
+		end,
+
+		[cp.getConst("EventConst").on_major_down_btn_clicked] = function(evt)
+			self:onVisibleStateChanged(evt.visible)
+		end,
+
+
+		--刷新红点
+		[cp.getConst("EventConst").refreshRedPoint] = function(evt)
+			if evt.type == "menpai" then
+				self:resetRedPoint()
+			end
+		end,
+
+        [cp.getConst("EventConst").FeatureRsp] = function(data)
+			self:refreshFeature()
+        end,
+
+		--更新人物全属性
+		[cp.getConst("EventConst").GetRoleRsp] = function(evt)
+			self:refreshLearn()
+		end,
+		
+	}
+end
+
+function MenPaiMainLayer:onInitView(openInfo)
+    self.openInfo = openInfo
+	self.rootView = cc.CSLoader:createNode("uicsb/uicsb_menpai/uicsb_menpai_main_new.csb") 
+	self:addChild(self.rootView)
+
+	local childConfig = {
+		["Panel_root"] = {name = "Panel_root"},
+		["Panel_root.Image_top"] = {name = "Image_top"},
+		["Panel_root.Image_top.Text_title"] = {name = "Text_title"},
+		
+		["Panel_root.Panel_buttons"] = {name = "Panel_buttons"},
+		["Panel_root.Panel_buttons.Panel_1"] = {name = "Panel_1",click = "onUIButtonClick"},
+		["Panel_root.Panel_buttons.Panel_2"] = {name = "Panel_2",click = "onUIButtonClick"},
+		["Panel_root.Panel_buttons.Panel_3"] = {name = "Panel_3",click = "onUIButtonClick"},
+		["Panel_root.Panel_buttons.Panel_4"] = {name = "Panel_4",click = "onUIButtonClick"},
+		["Panel_root.Panel_buttons.Panel_5"] = {name = "Panel_5",click = "onUIButtonClick"},
+		["Panel_root.Panel_buttons.Panel_6"] = {name = "Panel_6",click = "onUIButtonClick"},
+
+		["Panel_root.Panel_buttons.Panel_2.Image_2_lock"] = {name = "Image_2_lock"},
+		["Panel_root.Panel_buttons.Panel_3.Image_3_lock"] = {name = "Image_3_lock"},
+	
+	}
+	cp.getManager("ViewManager").setCSNodeBinding(self,self.rootView,childConfig)
+	self.rootView:setContentSize(display.size)
+	-- self.Panel_root:setContentSize(cc.size(display.width,display.height))
+	-- self.Panel_root:setPosition(cc.p(display.cx,display.height))
+	cp.getManager("ViewManager").setCSNodeTextClear(self.rootView)
+
+	-- cp.getManager("ViewManager").addModal(self,cp.getManualConfig("Color").defaultModal_c4b)
+	cp.getManager("ViewManager").addModalByDefaultImage(self)
+	ccui.Helper:doLayout(self["rootView"])
+
+	self.Panel_6:setVisible(false)
+	self.Panel_root:setTouchEnabled(true)
+
+	local major_roleAtt = cp.getUserData("UserRole"):getValue("major_roleAtt")
+	-- local cfgItem = cp.getManager("ConfigManager").getItemByKey("GangEnhance",major_roleAtt.career)
+	local name = {[0]="少   林",[1]="武   当",[2]="丐   帮",[3]="峨   眉",[4]="霸   刀",[5]="天   山",[6]="明   教",[7]="五   毒"}
+	self.Text_title:setString(name[major_roleAtt.career])
+
+	--红点提示
+	self:resetRedPoint()
+	cp.getManager("AudioManager"):playMusic(cp.getManualConfig("AudioConfig").bg_menpai_ui,true)
+	self:refreshFeature()
+	self:refreshLearn()
+
+end
+
+function MenPaiMainLayer:onEnterScene()
+
+	local cur_guide_module_name = cp.getGameData("GameNewGuide"):getValue("cur_guide_module_name")
+	local cur_step = cp.getGameData("GameNewGuide"):getValue("cur_step")
+	if cur_guide_module_name == "menpai_wuxue" then
+		local info = 
+		{
+			classname = "MenPaiMainLayer",
+		}
+		self:dispatchViewEvent( cp.getConst("EventConst").enter_layer_notice, info )
+	end
+
+	self:refreshFeature()
+end
+
+function MenPaiMainLayer:onExistScene()
+	
+end
+
+function MenPaiMainLayer:refreshLearn()
+	cp.getManager("GDataManager"):showLearnPoint(self.Panel_1)
+end
+
+function MenPaiMainLayer:resetRedPoint()
+	local needNotice = cp.getManager("GDataManager"):checkMenPaiRedPoint()
+	for i=1,6 do
+		if needNotice[i] == 1 then
+			local fileName = i == 4 and "ui_common_jinjie.png" or nil
+			cp.getManager("ViewManager").addRedDot(self["Panel_".. tostring(i)],cc.p(130,130),fileName)
+		else
+			cp.getManager("ViewManager").removeRedDot(self["Panel_".. tostring(i)])
+		end
+	end
+
+end
+
+function MenPaiMainLayer:onUIButtonClick(sender)
+
+	local buttonName = sender:getName()
+	log("MenPaiMainLayer:onUIButtonClick buttonName = " .. buttonName)
+
+	if self:checkLock(buttonName) == false then
+		return
+	end
+
+	local idx = tonumber(string.sub(buttonName,string.len("Panel_")+1))
+	if 1 == idx then
+		local MenPaiSkillLayer = require("cp.view.scene.world.menpai.MenPaiSkillLayer"):create() 
+		self.rootView:addChild(MenPaiSkillLayer)
+		MenPaiSkillLayer:setCloseCallBack(function()
+			self:resetRedPoint()
+			self:dispatchViewEvent( cp.getConst("EventConst").refreshRedPoint, {type="menpai"} )
+			self:onEnterScene()
+		end)
+	elseif 2 == idx then
+		local MenPaiXiuLian = require("cp.view.scene.world.menpai.MenPaiXiuLian"):create() 
+		self.rootView:addChild(MenPaiXiuLian)
+		MenPaiXiuLian:setCloseCallBack(function()
+			self:resetRedPoint()
+			self:dispatchViewEvent( cp.getConst("EventConst").refreshRedPoint, {type="menpai"} )
+		end)
+	elseif 3 == idx then
+		local MenPaiPlace = require("cp.view.scene.world.menpai.MenPaiPlace"):create() 
+		self.rootView:addChild(MenPaiPlace)
+		MenPaiPlace:setCloseCallBack(function()
+			self:resetRedPoint()
+		end)
+	elseif 4 == idx then
+		local major_roleAtt = cp.getUserData("UserRole"):getValue("major_roleAtt")
+		if major_roleAtt.hierarchy >= 6 then
+			cp.getManager("ViewManager").gameTip("您已通过六阶挑战，继承师门衣钵。")
+			return
+		end
+
+		local MenPaiJinJie = require("cp.view.scene.world.menpai.MenPaiJinJie"):create() 
+		self.rootView:addChild(MenPaiJinJie)
+		MenPaiJinJie:setCloseCallBack(function()
+			self:resetRedPoint()
+			self:dispatchViewEvent( cp.getConst("EventConst").refreshRedPoint, {type="menpai"} )
+		end)
+	elseif 5 == idx then
+
+		local cfgItem = cp.getManager("ConfigManager").getItemByKey("Store",1) --门派商店
+		if cfgItem then
+			local roleAtt = cp.getUserData("UserRole"):getValue("major_roleAtt")
+			if roleAtt.hierarchy < cfgItem:getValue("Hierarchy") then
+				cp.getManager("ViewManager").gameTip("人物达到" .. tostring(cfgItem:getValue("Hierarchy")) .. "阶后开启!")
+				return
+			end
+		end
+
+		self:openMenPaiShop()
+	elseif 6 == idx then
+		cp.getManager("ViewManager").gameTip("功能正在开发中，尽情期待！")
+	end
+end
+
+
+function MenPaiMainLayer:openMenPaiShop()
+	local ShopMainUI = self.rootView:getChildByName("ShopMainUI")
+    if ShopMainUI ~= nil then
+		ShopMainUI:removeFromParent()
+		ShopMainUI = nil
+    end
+    
+    local storeID = 1 --门派商店
+    local openInfo = {storeID = storeID, closeCallBack = function()
+        local ShopMainUI = self.rootView:getChildByName("ShopMainUI")
+		if ShopMainUI ~= nil then
+			ShopMainUI:removeFromParent()
+			ShopMainUI = nil
+		end
+		self:dispatchViewEvent( cp.getConst("EventConst").refreshRedPoint, {type="menpai"} )
+    end}
+	ShopMainUI =  require("cp.view.scene.world.shop.ShopMainUI"):create(openInfo)
+	ShopMainUI:setName("ShopMainUI")
+    self.rootView:addChild(ShopMainUI)
+
+end
+
+function MenPaiMainLayer:onVisibleStateChanged(isVisible)
+	if isVisible then
+		--红点提示
+		cp.getManager("AudioManager"):playMusic(cp.getManualConfig("AudioConfig").bg_menpai_ui,true)
+		self:resetRedPoint()
+		self:refreshLearn()
+		ccui.Helper:doLayout(self["rootView"])
+	end
+end
+
+function MenPaiMainLayer:refreshFeature()
+    local major_feature = cp.getUserData("UserRole"):getValue("major_feature")
+    if major_feature and next(major_feature) then
+        for _, v in pairs(major_feature) do
+            if v.type == 13 then
+                cp.getManager("GDataManager"):setFeature(self.Panel_3, self.Image_3_lock, v)
+			elseif v.type == 14 then
+                cp.getManager("GDataManager"):setFeature(self.Panel_2, self.Image_2_lock, v)
+            end
+        end
+    end
+end
+
+function MenPaiMainLayer:checkLock(buildName)
+	local state
+    if "Panel_2" == buildName then
+		state = cp.getManager("GDataManager"):procFeatureState(14, self)
+	elseif "Panel_3" == buildName then
+		state = cp.getManager("GDataManager"):procFeatureState(13, self)
+	else
+		return true
+    end
+
+	if state == -1 or state == 0 then
+		return false
+	end
+
+	if state == 1 or state == 2 then
+		return true
+	end
+
+	return true
+end
+
+return MenPaiMainLayer

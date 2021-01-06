@@ -1,0 +1,193 @@
+
+local BLayer = require "cp.view.ui.base.BLayer"
+local LilianMainLayer = class("LilianMainLayer",BLayer)
+
+function LilianMainLayer:create(openInfo)
+	local layer = LilianMainLayer.new(openInfo)
+	return layer
+end
+
+function LilianMainLayer:initListEvent()
+	self.listListeners = {
+		[cp.getConst("EventConst").on_cache_ui_visible_state_changed] = function(evt)
+			self:removeFromParent()
+		end,
+	}
+end
+
+function LilianMainLayer:onInitView(openInfo)
+    self.openInfo = openInfo
+	self.rootView = cc.CSLoader:createNode("uicsb/uicsb_lilian/uicsb_lilian_main.csb") 
+	self:addChild(self.rootView)
+
+	local childConfig = {
+        ["Panel_root"] = {name = "Panel_root"},
+        ["Panel_root.Panel_bg"] = {name = "Panel_bg"},
+        ["Panel_root.Panel_bg.Image_bg"] = {name = "Image_bg"},
+        ["Panel_root.Panel_bg.Panel_title"] = {name = "Panel_title"},
+        
+        ["Panel_root.Panel_bg.Panel_title.ScrollView_1"] = {name = "ScrollView_1"},
+  
+        ["Panel_root.Panel_bg.Panel_title.Button_close"] = {name = "Button_close",click = "onUIButtonClick"},
+	}
+	cp.getManager("ViewManager").setCSNodeBinding(self,self.rootView,childConfig)
+    
+    self:adjustUI()
+
+    self:addLilianItems()
+
+    cp.getManager("ViewManager").setCSNodeTextClear(self.rootView)
+    cp.getManager("ViewManager").addModal(self,cp.getManualConfig("Color").defaultModal_c4b)
+
+	cp.getManager("GDataManager"):setHierarchyExercise(true)
+	self:dispatchViewEvent(cp.getConst("EventConst").lilian_open, true)
+end
+
+function LilianMainLayer:onEnterScene()
+    cp.getManager("AudioManager"):playMusic(cp.getManualConfig("AudioConfig").bg_fuben_1,true)
+    local major_roleAtt = cp.getUserData("UserRole"):getValue("major_roleAtt")
+    local hierarchy = major_roleAtt.hierarchy
+
+    local newPlaceInfo = {}
+    local minID = 0
+    local itemList = cp.getManager("ConfigManager").getItemListByMatch("GameExercise",{["Hierarchy"] = hierarchy})
+    if itemList ~= nil and next(itemList) ~= nil then
+        for i=1,table.nums(itemList) do
+            
+            local newID = itemList[i]:getValue("ID")
+            if newID > major_roleAtt.exerciseId then
+                newPlaceInfo[newID] = itemList[i]:getValue("Name")
+                if minID == 0 then
+                    minID = newID
+                else
+                    minID = math.min(minID,newID) 
+                end
+            end
+        end
+    end
+
+    if minID > 0 then
+        local newName = newPlaceInfo[minID] or "走馬川"
+        local function comfirmFunc()
+            local req = {exerciseId = minID}
+            self:doSendSocket(cp.getConst("ProtoConst").StartExerciseReq, req)
+        end
+        -- local content = "當前已達到X階\n建議前往【" .. newName .. "】歷練！"
+        -- cp.getManager("ViewManager").showGameMessageBox("系統消息",content,2,comfirmFunc,nil)
+
+        local GameConst = cp.getConst("GameConst")
+        local contentTable = {
+            {type="ttf", fontSize=24, text="當前已達到", textColor=GameConst.ContentTextColor, outLineEnable=false},
+            {type="ttf", fontSize=24, text=tostring(hierarchy), textColor=GameConst.QualityTextColor[2], outLineColor=GameConst.QualityOutlineColor[2], outLineSize=2},
+            {type="ttf", fontSize=24, text="階," ,textColor=GameConst.ContentTextColor, outLineEnable=false},
+            {type="blank", fontSize=1},
+            {type="ttf", fontSize=24, text="建議前往", textColor=GameConst.ContentTextColor, outLineEnable=false},
+            {type="ttf", fontSize=24, text=newName, textColor=GameConst.QualityTextColor[2], outLineColor=GameConst.QualityOutlineColor[2], outLineSize=2},
+            {type="ttf", fontSize=24, text="歷練！", textColor=GameConst.ContentTextColor, outLineEnable=false},
+        }
+        cp.getManager("ViewManager").showGameMessageBox("系統消息",contentTable,2,comfirmFunc,nil)
+
+        local result,step = cp.getManager("GDataManager"):checkNeedGuide("lilian")
+        if result then
+            cp.getManager("ViewManager").openNewPlayerGuide("lilian",step)
+        end
+    end
+end
+
+function LilianMainLayer:onUIButtonClick(sender)
+    local buttonName = sender:getName()
+    log("click button : " .. buttonName)
+    if buttonName == "Button_close" then
+        self:removeFromParent()
+    end
+end
+
+function LilianMainLayer:addLilianItems()
+    
+	local function itemClicked(info,btnName)
+        if "Button_view_drop" == btnName then
+            if info.items ~= nil then
+                if #info.items > 0 then
+                    local itemList = {}
+                    for i=1,#info.items do
+                        table.insert(itemList, {id = info.items[i], num=1,hideName = false})
+                    end
+                    cp.getManager("ViewManager").showGameRewardPreView(itemList,info.name,false)
+                end
+            end
+            
+        elseif "Panel_item" == btnName or "Button_name_bg" == btnName or "Button_enter" == btnName then
+            local major_roleAtt = cp.getUserData("UserRole"):getValue("major_roleAtt")
+            local hierarchy = major_roleAtt.hierarchy
+        
+            local itemcfg = cp.getManager("ConfigManager").getItemByKey("GameExercise",info.id)
+            if hierarchy < itemcfg:getValue("Hierarchy") then
+                cp.getManager("ViewManager").gameTip("歷練地處於鎖住狀態，請先提升角色階數來解鎖！")
+                return
+            end
+
+            -- 判斷是否已經在歷練中了，
+            local exerciseId = cp.getUserData("UserRole"):getValue("major_roleAtt").exerciseId
+            if exerciseId == 0 then
+                local req = {exerciseId = info.id}
+                self:doSendSocket(cp.getConst("ProtoConst").StartExerciseReq, req)
+            else
+                if exerciseId ~= info.id then
+                    --切換歷練地
+                    local function comfirmFunc()
+                        local req = {exerciseId = info.id}
+                        self:doSendSocket(cp.getConst("ProtoConst").StartExerciseReq, req)
+                    end
+                    local GameConst = cp.getConst("GameConst")
+                    local contentTable = {
+                        {type="ttf", fontSize=24, text="是否切換到", textColor=GameConst.ContentTextColor, outLineEnable=false},
+                        {type="ttf", fontSize=24, text=info.name, textColor=GameConst.QualityTextColor[2], outLineColor=GameConst.QualityOutlineColor[2], outLineSize=2},
+                        {type="ttf", fontSize=24, text="進行歷練？", textColor=GameConst.ContentTextColor, outLineEnable=false},
+                    }
+                    cp.getManager("ViewManager").showGameMessageBox("系統消息",contentTable,2,comfirmFunc,nil)
+                else
+                    self:dispatchViewEvent(cp.getConst("EventConst").StartExerciseRsp, nil)
+                end
+            end
+        end
+    end
+    
+    self.ScrollView_1:setTouchEnabled(true)
+	for i=1,6 do
+		local openInfo = {id = i}
+		local item  = require("cp.view.scene.world.lilian.LilianMainItem"):create(openInfo)
+        item:setItemClickCallBack(itemClicked)
+		self.ScrollView_1:addChild(item)
+		
+		local x = math.floor((i-1)%2)
+		local y = math.floor((i-1)/2)
+        -- log("item x=%d,y=%d",x,y)
+        local pos = cc.p(x*(600-288), self.ScrollView_1:getInnerContainerSize().height-y*(288+15))
+        -- dump(pos)
+		item:setPosition(pos)
+	end
+	
+end
+
+
+function LilianMainLayer:adjustUI()
+    self.rootView:setContentSize(display.width,display.height)
+    if display.height > 1080 then
+        self.Panel_root:setContentSize(720,1010)
+        self.Panel_root:setPositionY(display.height/2 + 110/2)
+        self.ScrollView_1:setContentSize(cc.size(600,900))  
+        self.ScrollView_1:setTouchEnabled(false)
+    elseif display.height > 960 then
+        self.Panel_root:setContentSize(720,910)
+        self.Panel_root:setPositionY(display.height/2 + 110/2)
+        self.ScrollView_1:setContentSize(cc.size(600,800))  
+    else
+        self.Panel_root:setContentSize(720,790)
+        self.Panel_root:setPositionY(520)
+        self.ScrollView_1:setContentSize(cc.size(600,675))  
+    end
+    self.ScrollView_1:setScrollBarEnabled(false)
+    ccui.Helper:doLayout(self.rootView)
+end
+
+return LilianMainLayer

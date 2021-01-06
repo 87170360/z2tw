@@ -1,0 +1,419 @@
+--第二個世界地圖場景(劇情，歷練，等)
+local BNode = require "cp.view.ui.base.BNode"
+local JiangHuLayer = class("JiangHuLayer",BNode)
+
+function JiangHuLayer:create(openInfo)
+	local node = JiangHuLayer.new(openInfo)
+	return node
+end
+
+function JiangHuLayer:initListEvent()
+	self.listListeners = {
+            --開始歷練
+            [cp.getConst("EventConst").StartExerciseRsp] = function(evt)
+                self:onStartExercise(evt)
+            end,
+
+			[cp.getConst("EventConst").lilian_open] = function(evt)
+				self:refreshNew()
+			end,
+
+            [cp.getConst("EventConst").FeatureRsp] = function(data)
+                self:refreshFeature()
+            end,
+
+            --新手指引點擊目標點
+            [cp.getConst("EventConst").guide_click_view_point] = function(evt)
+            if evt.classname == "JiangHuLayer" then
+                if evt.guide_name == "story" or  evt.guide_name == "character" or evt.guide_name == "wuxue_use" or evt.guide_name == "wuxue_pos_change" or evt.guide_name == "equip" then
+                    self:onUIButtonClick(self[evt.target_name])
+                end
+            end
+        end,
+
+        [cp.getConst("EventConst").get_guide_view_point] = function(evt)
+            if evt.classname == "JiangHuLayer" then
+                if evt.guide_name == "story" or evt.guide_name == "character" or evt.guide_name == "wuxue_use" or evt.guide_name == "wuxue_pos_change" or evt.guide_name == "equip" then
+
+                    local boundbingBox = self[evt.target_name]:getBoundingBox()
+                    local pos = self[evt.target_name]:getParent():convertToWorldSpace(cc.p(boundbingBox.x+boundbingBox.width/2,boundbingBox.y+boundbingBox.height/2))
+                    pos.x = pos.x + 30
+                    --此步指引為向右的手指,-- Button_MenPai處的指引為menpai_wuxue指引的第3步，故索引設置為3，方便後面調用
+                    local finger_info = {pos = pos, finger = {guide_type = "point",dir="right"} }
+                    evt.ret = finger_info
+
+                end
+            end
+        end,
+        [cp.getConst("EventConst").SignUpMountainRsp] = function(evt)
+            self:checkNeedNotifyMountain()
+        end,
+
+        [cp.getConst("EventConst").open_zhuluzhanchang_view] = function(flag)
+            if not self.ZLZCMainLayer and flag then
+                local ZLZCMainLayer = require("cp.view.scene.world.zhuluzhanchang.ZLZCMainLayer"):create()
+                ZLZCMainLayer:setCloseCallBack(function()
+                    
+                end)
+                self.rootView:addChild(ZLZCMainLayer, 2)
+                self.ZLZCMainLayer = ZLZCMainLayer
+            end
+    
+            if self.ZLZCMainLayer and not flag then
+                self.ZLZCMainLayer:removeFromParent()
+                self.ZLZCMainLayer = nil
+            end 
+    
+            if flag then
+                self.ZLZCMainLayer:setVisible(true)
+            end
+    
+        end,
+
+	}
+end
+
+function JiangHuLayer:onInitView(openInfo)
+	self.rootView = cc.CSLoader:createNode("uicsb/uicsb_worldmap/jianghuLayer.csb") 
+	self:addChild(self.rootView)
+
+	local childConfig = {
+        ["Panel_root"] = {name = "Panel_root"},
+        ["Panel_root.ScrollView_1"] = {name = "ScrollView_1"},
+        
+        ["Panel_root.ScrollView_1.Image_bg"] = {name = "Image_bg"},
+        ["Panel_root.ScrollView_1.Image_bg.Button_1"] = {name = "Button_1",click = "onUIButtonClick",clickScale=1},
+        ["Panel_root.ScrollView_1.Image_bg.Button_2"] = {name = "Button_2",click = "onUIButtonClick",clickScale=1},
+        ["Panel_root.ScrollView_1.Image_bg.Button_3"] = {name = "Button_3",click = "onUIButtonClick",clickScale=1},
+        ["Panel_root.ScrollView_1.Image_bg.Button_4"] = {name = "Button_4",click = "onUIButtonClick",clickScale=1},
+        ["Panel_root.ScrollView_1.Image_bg.Button_5"] = {name = "Button_5",click = "onUIButtonClick",clickScale=1},
+        -- ["Panel_root.ScrollView_1.Image_bg.Button_6"] = {name = "Button_6",click = "onUIButtonClick",clickScale=1},
+        ["Panel_root.ScrollView_1.Image_bg.Button_7"] = {name = "Button_7",click = "onUIButtonClick",clickScale=1},
+        ["Panel_root.ScrollView_1.Image_bg.Image_lock1"] = {name = "Image_lock1"},
+        ["Panel_root.ScrollView_1.Image_bg.Image_lock2"] = {name = "Image_lock2"},
+        ["Panel_root.ScrollView_1.Image_bg.Image_lock3"] = {name = "Image_lock3"},
+        ["Panel_root.ScrollView_1.Image_bg.Image_lock4"] = {name = "Image_lock4"},
+	}
+    cp.getManager("ViewManager").setCSNodeBinding(self,self.rootView,childConfig)
+    cp.getManager("ViewManager").setCSNodeTextClear(self.rootView)
+    self.Panel_root:setPosition(cc.p(display.cx,display.cy))
+    self.rootView:setContentSize(display.size)
+    self.ScrollView_1:setContentSize(display.size)
+    self.ScrollView_1:jumpToPercentVertical(50)
+    self.ScrollView_1:setScrollBarEnabled(false)
+    self.ScrollView_1:setTouchEnabled(false)
+    for i=1,5 do
+        self["Button_" .. tostring(i)]:setAlphaTouchEnable(true)
+    end
+    self["Button_7"]:setAlphaTouchEnable(true)
+
+    local apple_test_version = cp.getManualConfig("Net").apple_test_version
+    local china_version = cp.getManualConfig("Net").china_version
+    if apple_test_version == true or china_version then
+        self["Button_7"]:setVisible(false)
+    end
+
+    ccui.Helper:doLayout(self.rootView)
+	self:refreshNew()
+    self:setupAchivementGuide()
+end
+
+function JiangHuLayer:setupAchivementGuide()
+    local guideType = cp.getUserData("UserAchivement"):getValue("GuideType")
+    if not guideType then return end
+    local guideBtn = nil
+    if guideType == 18 then
+        guideBtn = self.Button_3
+        cp.getUserData("UserAchivement"):setValue("GuideType", nil)
+    elseif guideType == 19 then
+        guideBtn = self.Button_5
+        cp.getUserData("UserAchivement"):setValue("GuideType", nil)
+    elseif guideType == 20 then
+        guideBtn = self.Button_5
+        cp.getUserData("UserAchivement"):setValue("GuideType", nil)
+    elseif guideType == 21 then
+        guideBtn = self.Button_1
+        cp.getUserData("UserAchivement"):setValue("GuideType", nil)
+    elseif guideType == 22 then
+        guideBtn = self.Button_2
+        cp.getUserData("UserAchivement"):setValue("GuideType", nil)
+    elseif guideType == 31 then
+        guideBtn = self.Button_4
+        cp.getUserData("UserAchivement"):setValue("GuideType", nil)
+    elseif guideType == 39 then
+        guideBtn = self.Button_5
+    else
+        return
+    end
+    local guideLayer = cp.getManager("ViewManager").openGuideLayer(self, guideBtn, 0.2)
+    guideLayer:setTouchCallback(function()
+        guideLayer:removeFromParent()
+    end)
+end
+
+function JiangHuLayer:onUIButtonClick(sender)
+    local buttonName = sender:getName()
+    log("click button : " .. buttonName)
+    local index = string.sub(buttonName,string.len( "Button_" )+1)
+    local tag = tonumber(index)
+	if tag <= 4 and self:checkLock(tag) == false then  -- 劇情章節默認開啟
+		return
+	end
+
+    if tag == 1 then -- 歷練
+        self:openLilianMainLayer()
+    elseif tag == 2 then -- 祕境
+        --請求章節訊息
+        self:openMijingMainLayer()
+    
+    elseif tag == 3 then -- 修羅塔
+        self:dispatchViewEvent("GetTowerDataRsp", true)
+    elseif tag == 4 then --華山論劍
+        local req = {}
+        req.phase = 0
+        self:doSendSocket(cp.getConst("ProtoConst").GetMountainPlayerListReq, req)  
+    elseif tag == 5 then -- 劇情章節
+        self:openChapterUI()
+    elseif tag == 6 then 
+        
+    elseif tag == 7 then -- 逐鹿戰場
+        
+        cp.getManager("PvpSocketManager"):doDisConnect()
+        cp.getManager("PvpSocketManager"):doConnect()
+        
+    end
+
+end
+
+function JiangHuLayer:checkLock(index)
+	local state
+	state = cp.getManager("GDataManager"):procFeatureState(index, self)
+	if state == -1 or state == 0 then
+		return false
+	end
+
+	if state == 1 or state == 2 then
+		return true
+	end
+	return true
+end
+
+
+function JiangHuLayer:onEnterScene()
+    cp.getManager("AudioManager"):playMusic(cp.getManualConfig("AudioConfig").bg_main,true)
+    self:onNewGuideStory()
+    self:checkNeedNotifyMountain()
+    
+    --歷練活動
+    local result1 = self:checkLiLianHuoDong()
+    local Image_huodong = self.Button_1:getChildByName("Image_huodong")
+    Image_huodong:setVisible(result1)
+
+    --祕境活動
+    local result2 = self:checkMiJingHuoDong()
+    Image_huodong = self.Button_2:getChildByName("Image_huodong")
+    Image_huodong:setVisible(result2)
+
+	--解鎖
+	self:refreshFeature()
+end
+
+function JiangHuLayer:refreshFeature()
+	local major_feature = cp.getUserData("UserRole"):getValue("major_feature")
+	for _, v in ipairs(major_feature) do
+		if v.type == 1 then
+			cp.getManager("GDataManager"):setFeature(self.Button_1, self.Image_lock1, v)
+		elseif v.type == 2 then
+			cp.getManager("GDataManager"):setFeature(self.Button_2, self.Image_lock2, v)
+		elseif v.type == 3 then
+			cp.getManager("GDataManager"):setFeature(self.Button_3, self.Image_lock3, v)
+		elseif v.type == 4 then
+			cp.getManager("GDataManager"):setFeature(self.Button_4, self.Image_lock4, v)
+		end
+	end
+end
+
+function JiangHuLayer:checkNeedNotifyMountain()
+    if cp.getUtils("NotifyUtils").needNotifyMountain() then
+        cp.getManager("ViewManager").addRedDot(self.Button_4,cc.p(230,535))
+    else
+        cp.getManager("ViewManager").removeRedDot(self.Button_4)
+    end
+end
+
+function JiangHuLayer:onExistScene()
+  -- if self.MijingMainLayer ~= nil then
+  --     self.MijingMainLayer:removeFromParent()
+  -- end
+  -- self.MijingMainLayer = nil
+
+  -- if self.LilianDetailLayer ~= nil then
+  --   self.LilianDetailLayer:removeFromParent()
+  -- end
+  -- self.LilianDetailLayer = nil
+
+  -- if self.ChapterPartLayer then
+  --   self.ChapterPartLayer:removeFromParent()
+  -- end
+  -- self.ChapterPartLayer = nil
+end
+
+function JiangHuLayer:openMijingMainLayer()
+  if self.MijingMainLayer ~= nil then
+      self.MijingMainLayer:removeFromParent()
+  end
+  self.MijingMainLayer = nil
+
+  local MijingMainLayer =  require("cp.view.scene.world.mijing.MijingMainLayer"):create()
+  MijingMainLayer:setCloseCallBack(handler(self,self.onMijingClickCallBack))
+  self.rootView:addChild(MijingMainLayer,2)
+  self.MijingMainLayer = MijingMainLayer
+
+end
+
+function JiangHuLayer:onMijingClickCallBack(retValue)
+  if retValue > 0 then
+      local openInfo = {id = retValue}
+      local MijingDetailLayer =  require("cp.view.scene.world.mijing.MijingDetailLayer"):create(openInfo)
+      self.rootView:addChild(MijingDetailLayer,2)
+      MijingDetailLayer:setCloseCallBack(
+          function()
+            self:openMijingMainLayer()
+            MijingDetailLayer:removeFromParent()
+            MijingDetailLayer = nil
+          end
+      )
+  end
+  if self.MijingMainLayer ~= nil then
+      self.MijingMainLayer:removeFromParent()
+  end
+  self.MijingMainLayer = nil
+end
+
+
+function JiangHuLayer:openChapterUI()
+  local normal_chapter_part_id = cp.getUserData("UserCombat"):getValue("normal_chapter_part_id")
+  if normal_chapter_part_id ~= nil then
+      local chapter = math.floor(normal_chapter_part_id / 1000)
+      local part = math.floor(normal_chapter_part_id % 1000)
+      part = math.max(part,1)
+      --local open_info = {data = {chapter = chapter, part = part}}
+      local open_info = {}
+      local ChapterPartLayer = require("cp.view.scene.world.major.ChapterPartLayer"):create(open_info)
+      -- ChapterPartLayer:setCloseCallBack(handler(self,self.onChapterPartLayerCallBack))
+      self.rootView:addChild(ChapterPartLayer, 2)
+      self.ChapterPartLayer = ChapterPartLayer
+  end
+end
+
+function JiangHuLayer:openLilianMainLayer()
+  if self.LilianDetailLayer ~= nil then
+      self.LilianDetailLayer:removeFromParent()
+  end
+  
+  self.LilianDetailLayer = nil
+
+  local LilianMainLayer =  require("cp.view.scene.world.lilian.LilianMainLayer"):create()
+  self.rootView:addChild(LilianMainLayer,2)
+  self.LilianMainLayer = LilianMainLayer
+
+end
+
+function JiangHuLayer:onStartExercise(evt)
+  if self.LilianMainLayer ~= nil then
+      self.LilianMainLayer:removeFromParent()
+  end
+  self.LilianMainLayer = nil
+
+  local LilianDetailLayer = require("cp.view.scene.world.lilian.LilianDetailLayer"):create()
+  LilianDetailLayer:setCloseCallBack(handler(self,self.openLilianMainLayer))
+  self.rootView:addChild(LilianDetailLayer,2)
+  self.LilianDetailLayer = LilianDetailLayer
+end
+
+
+function JiangHuLayer:onNewGuideStory()
+    local needGuid = false
+    local cur_guide_module_name = cp.getGameData("GameNewGuide"):getValue("cur_guide_module_name")
+    local cur_step = cp.getGameData("GameNewGuide"):getValue("cur_step")
+    if cur_guide_module_name == "story" then
+        if cur_step <= 1 then
+           cp.getGameData("GameNewGuide"):setValue("cur_step",2)
+        end
+        if cur_step <= 3 then
+            needGuid = true
+        end
+    elseif cur_guide_module_name == "character" then
+        if cur_step == 21 then
+            needGuid = true
+        end
+    elseif cur_guide_module_name == "wuxue_use" then
+        if cur_step == 10 then
+            needGuid = true
+        end
+    elseif cur_guide_module_name == "wuxue_pos_change" then
+        if cur_step == 8 then
+            needGuid = true
+        end
+    elseif cur_guide_module_name == "equip" then
+        if cur_step == 32 then
+            needGuid = true
+        end
+    end
+    if needGuid  then
+        local sequence = {}
+        table.insert(sequence, cc.DelayTime:create(0.3))
+        table.insert(sequence,cc.CallFunc:create(
+            function()
+                local info =
+                {
+                    classname = "JiangHuLayer",
+                }
+                self:dispatchViewEvent( cp.getConst("EventConst").enter_layer_notice, info )
+            end)
+        )
+        self:runAction(cc.Sequence:create(sequence))
+    end
+end
+
+
+function JiangHuLayer:checkLiLianHuoDong()
+    local cnt = cp.getManager("ConfigManager").getItemCount("GameExercise")
+	for i=1,cnt do
+		local cfgItem = cp.getManager("ConfigManager").getItemAt("GameExercise",i)
+        local ID = cfgItem:getValue("ID")
+        local isInActive = cp.getManager("GDataManager"):isLiLianInActivityTime(ID)
+        if isInActive then
+            return true
+        end
+    end
+    return false
+end
+
+function JiangHuLayer:checkMiJingHuoDong()
+    local cnt = cp.getManager("ConfigManager").getItemCount("GameMiJing")
+	for i=1,cnt do
+		local cfgItem = cp.getManager("ConfigManager").getItemAt("GameMiJing",i)
+        local Hierarchy = cfgItem:getValue("Hierarchy")
+        if Hierarchy == 1 then  --只判斷1階的就可以了
+            local ID = cfgItem:getValue("ID")
+            local isInActive = cp.getManager("GDataManager"):isMijingInActivityTime(ID)
+            if isInActive then
+                return true
+            end
+        end
+    end
+    return false
+end
+
+function JiangHuLayer:refreshNew()
+	local open = cp.getManager("GDataManager"):getHierarchyExercise()
+
+	if open then 
+		cp.getManager("ViewManager").removeDot(self.Button_1, "newpic")
+	else
+		cp.getManager("ViewManager").addDot(self.Button_1, cc.p(160,235), "ui_common_xin.png", "newpic")
+	end
+end
+
+return JiangHuLayer
